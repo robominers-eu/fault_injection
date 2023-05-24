@@ -50,9 +50,6 @@ class LaserScanModifierNode(Node):
             sys.exit()
 
 
-
-
-
 def main(args=None): 
     rclpy.init(args=args) 
     node = LaserScanModifierNode() 
@@ -66,7 +63,6 @@ def main(args=None):
 
 
 if __name__ == '__main__': 
-
     main() 
 
  

@@ -1,22 +1,11 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    namespace = 'rm2_sim'
     use_sim_time = LaunchConfiguration('use_sim_time')
-
-    camera_stf = Node(package='tf2_ros', executable='static_transform_publisher',
-                      namespace=namespace,
-                      output='screen',
-                      name='camera_stf',
-                      arguments=[
-                          '0', '0', '0', '0', '0', '0', '1',
-                              'd_435_camera',
-                              'rm2_sim/base_link/rgbd_camera'
-                      ])
 
 
     pcl2laser_cmd = Node(
@@ -44,7 +33,6 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value=['True'],
                               description='use sim time from /clock'),
-        camera_stf,
         pcl2laser_cmd,
    
     ])
