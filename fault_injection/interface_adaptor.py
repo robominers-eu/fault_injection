@@ -1,22 +1,20 @@
 from ament_index_python.packages import get_package_share_directory
 import os, subprocess
+import yaml
+from yaml.loader import SafeLoader
 
 interface_name_val = 'pointcloud_to_laserscan'
+name = interface_name_val + '_node'
+params_file = 'interfaces_definition.yaml'
+
 fi_pkg = get_package_share_directory('fault_injection')
 path = os.path.join(fi_pkg, 'config', 'interfaces_definition.yaml')
-template = os.path.join(fi_pkg, 'template.launch.py')
+with open(path) as f:
+    data = yaml.load(f, Loader=SafeLoader)
 
-with open(template, 'r') as file:
-        content = file.read()
-
-replace = "'" + interface_name_val + "'"
-substituted_content = content.replace("interface_name_val", replace)
-
-    # Open the output file in write mode and write the substituted content
-with open(template, 'w') as file:
-    file.write(substituted_content)
-
-command = "ros2 launch fault_injection template.launch.py"
-
-# Launch the Bash command
+# print(data)
+remap_list = data['pointcloud_to_laserscan_node']['ros__parameters']['remappings']
+remap = " --remap " + remap_list[0] + ":=" + remap_list[1] + " --remap " + remap_list[2] + ":=" + remap_list[3]
+#  launch the interface adaptor
+command = "ros2 run " + interface_name_val + " " + name + " --ros-args" + remap + " --params-file " + path 
 process = subprocess.Popen(command, shell=True)
