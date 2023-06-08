@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node 
 from sensor_msgs.msg import LaserScan 
 import subprocess, os, signal, sys
-
+from diagnostic_msgs.msg import DiagnosticArray
 
 class LaserScanModifierNode(Node): 
     def __init__(self): 
@@ -12,12 +12,10 @@ class LaserScanModifierNode(Node):
         self.publisher_ = self.create_publisher(LaserScan, 'scan', 30) 
 
         # Create a subscriber for the original scan topic 
-        self.subscription_ = self.create_subscription( 
-            LaserScan, 
-            'scan', 
-            self.scan_callback, 
-            30
-        ) 
+        self.subscription_ = self.create_subscription(LaserScan, 'scan', self.scan_callback, 30)
+        self.subscription_diagnostic = self.create_subscription(DiagnosticArray, 'diagnostic', self.diagnostics_callback, 1)
+
+
         self.get_logger().info("Injecting fault: zero laser error")
 
         self.subscription_  # prevent unused variable warning
@@ -34,20 +32,25 @@ class LaserScanModifierNode(Node):
                 break
         os.kill(os.getpid(), signal.SIGINT) # kill alsocurrent node
 
-    def scan_callback(self, msg):
-        # Modify the received scan message and add the constant value
+    def diagnostics_callback(self, msg):
         try:
-            if msg.header.frame_id == 'rm2_sim/base_link/front_lidar':
-                modified_scan = msg
-                # Add your constant value to the scan data
-                modified_scan.ranges = [0.0] * len(msg.ranges)
-                # Publish the modified scan message
-                self.publisher_.publish(modified_scan)
-                self.kill_ros2_node('lidar_bridge') # kill laser bridge
+            self.kill_ros2_node('lidar_bridge') # kill laser bridge
 
         except KeyboardInterrupt:
             self.get_logger().info('Shutting down lidar...')
             sys.exit()
+
+    def scan_callback(self, msg):
+        # Modify the received scan message and add the constant value
+
+        if msg.header.frame_id == 'rm2_sim/base_link/front_lidar':
+            modified_scan = msg
+            # Add your constant value to the scan data
+            modified_scan.ranges = [0.0] * len(msg.ranges)
+            # Publish the modified scan message
+            self.publisher_.publish(modified_scan)
+
+
 
 
 def main(args=None): 
